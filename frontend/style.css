@@ -189,10 +189,9 @@ dialog p { margin: 0 0 1.25rem; line-height: 1.5; font-size: .95rem; }
 @keyframes menu-pop { from { opacity: 0; transform: translateY(-4px) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { #user-dropdown { animation: none; } }
 
-/* Login: todo centrado y más compacto */
-body:not(.logged-in) .topbar { justify-content: center; position: relative; margin-bottom: 1.5rem; }
-body:not(.logged-in) .topbar h1 { font-size: 1.6rem; text-align: center; }
-body:not(.logged-in) .topbar-actions { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+/* Login: tarjeta compacta; el título va a la izquierda y los botones (idioma, tema) a la derecha */
+body:not(.logged-in) .topbar { margin-bottom: 1.5rem; }
+body:not(.logged-in) .topbar h1 { font-size: 1.6rem; text-align: left; }
 body:not(.logged-in) .tabs button { flex: 1; }
 body:not(.logged-in) #auth-form button[type=submit] { width: 100%; margin-top: .25rem; }
 body:not(.logged-in) #message { text-align: center; }
