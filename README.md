@@ -7,15 +7,33 @@ API de aprendizaje con FastAPI. Incluye:
 - CRUD de **todos** en PostgreSQL, privados: cada usuario solo ve los suyos
 - Tests automáticos con pytest
 
-## Cómo arrancarlo
+## Con Docker (app + base de datos)
+
+```powershell
+copy .env.example .env      # y rellena SECRET_KEY y, si quieres el chat, ANTHROPIC_API_KEY
+docker compose up -d --build
+```
+
+Abre http://127.0.0.1:8000/app. Un solo comando levanta PostgreSQL y la app (imagen en `Dockerfile`).
+
+- **Secretos:** nunca van dentro de la imagen. `.dockerignore` deja fuera `.env`, `.git`, `.venv` y `tests`; Compose los inyecta al arrancar desde tu `.env` (ignorado por git).
+- **Base de datos:** dentro de Docker la app usa `db:5432` (Compose sobrescribe `DATABASE_URL`); tu `.env` puede seguir con `localhost:5433` para correr uvicorn en tu máquina.
+- **Espera a Postgres:** la app arranca solo cuando la base está lista (`healthcheck` + `depends_on`).
+- **Seguridad del contenedor:** corre como usuario no root (`appuser`) y tiene `HEALTHCHECK`.
+- **Un solo worker** a propósito: los límites de login y del asistente viven en memoria (con varios workers harían falta Redis).
+- **Puertos y contraseña** configurables: `APP_PORT`, `DB_PORT`, `POSTGRES_PASSWORD` (variables de entorno o `.env`).
+- **Datos:** el volumen `pgdata` los conserva. El `name: fastapi_basics` de `docker-compose.yml` hace que se reutilice el volumen que ya tenías. Ver logs: `docker compose logs -f app`. Parar: `docker compose down` (con `-v` borra los datos).
+- **Reconstruir tras cambios de código:** `docker compose up -d --build`.
+
+## Cómo arrancarlo sin Docker para la app (desarrollo)
 
 ```powershell
 # 1. Entorno virtual e instalación (solo la primera vez)
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 
-# 2. Base de datos (PostgreSQL en Docker, puerto 5433)
-docker compose up -d
+# 2. Solo la base de datos (PostgreSQL en Docker, puerto 5433)
+docker compose up -d db
 
 # 3. Servidor
 uvicorn app.main:app --reload

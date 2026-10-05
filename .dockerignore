@@ -1,0 +1,18 @@
+# Keeps the build context small and, above all, keeps secrets out of the image
+.git
+.githooks
+.venv
+.env
+.env.*
+!.env.example
+.mcp.json
+*.pem
+*.key
+__pycache__
+*.pyc
+.pytest_cache
+tests
+.claude
+README.md
+docker-compose.yml
+Dockerfile

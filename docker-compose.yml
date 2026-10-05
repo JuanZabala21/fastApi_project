@@ -1,14 +1,40 @@
+# Keep this name: it is the project that already owns your Postgres volume (fastapi_basics_pgdata),
+# so `docker compose up` reuses your existing data instead of creating an empty database.
+name: fastapi_basics
+
 services:
   db:
     image: postgres:17
     environment:
       POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}   # dev default; change it for anything non-local
       POSTGRES_DB: app
     ports:
-      - "5433:5432"
+      - "${DB_PORT:-5433}:5432"   # published so you can also run uvicorn on your machine (see README)
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy   # wait until Postgres accepts connections
+    env_file:
+      - path: .env        # secrets (SECRET_KEY, ANTHROPIC_API_KEY...) come from your ignored .env
+        required: false
+    environment:
+      # Inside Docker the database is "db:5432", not localhost:5433 (this overrides the value in .env)
+      DATABASE_URL: postgresql+psycopg://app:${POSTGRES_PASSWORD:-app}@db:5432/app
+      # The assistant's MCP server calls this same app; inside the container that is its own port 8000
+      ASSISTANT_API_URL: http://127.0.0.1:8000
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    restart: unless-stopped
 
 volumes:
   pgdata:
