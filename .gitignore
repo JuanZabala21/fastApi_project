@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.pytest_cache/
+
+# Secrets: never commit these. Real values go in .env; .env.example is the committed template.
+.env
+.env.*
+!.env.example
+.mcp.json
+*.pem
+*.key

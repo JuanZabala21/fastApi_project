@@ -1,0 +1,10 @@
+fastapi[standard]
+sqlalchemy>=2.0
+psycopg[binary]
+pydantic-settings
+pyjwt
+pwdlib[argon2]
+pytest
+mcp>=2
+httpx
+anthropic

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tasks App</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="theme.js"></script>
+  <script src="i18n.js"></script>
+</head>
+<body>
+  <!-- Flags, defined once and reused with <use> -->
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="flag-us" viewBox="0 0 14.5 10">
+      <rect width="14.5" height="10" fill="#fff"/>
+      <g fill="#b22234"><rect y="0.0" width="14.5" height="0.77"/><rect y="1.54" width="14.5" height="0.77"/><rect y="3.08" width="14.5" height="0.77"/><rect y="4.62" width="14.5" height="0.77"/><rect y="6.15" width="14.5" height="0.77"/><rect y="7.69" width="14.5" height="0.77"/><rect y="9.23" width="14.5" height="0.77"/></g>
+      <rect width="5.8" height="5.38" fill="#3c3b6e"/>
+      <g fill="#fff"><circle cx="0.5" cy="0.6" r=".28"/><circle cx="1.7" cy="0.6" r=".28"/><circle cx="2.9" cy="0.6" r=".28"/><circle cx="4.1" cy="0.6" r=".28"/><circle cx="5.3" cy="0.6" r=".28"/><circle cx="1.1" cy="1.65" r=".28"/><circle cx="2.3" cy="1.65" r=".28"/><circle cx="3.5" cy="1.65" r=".28"/><circle cx="4.7" cy="1.65" r=".28"/><circle cx="0.5" cy="2.69" r=".28"/><circle cx="1.7" cy="2.69" r=".28"/><circle cx="2.9" cy="2.69" r=".28"/><circle cx="4.1" cy="2.69" r=".28"/><circle cx="5.3" cy="2.69" r=".28"/><circle cx="1.1" cy="3.73" r=".28"/><circle cx="2.3" cy="3.73" r=".28"/><circle cx="3.5" cy="3.73" r=".28"/><circle cx="4.7" cy="3.73" r=".28"/><circle cx="0.5" cy="4.78" r=".28"/><circle cx="1.7" cy="4.78" r=".28"/><circle cx="2.9" cy="4.78" r=".28"/><circle cx="4.1" cy="4.78" r=".28"/><circle cx="5.3" cy="4.78" r=".28"/></g>
+    </symbol>
+    <symbol id="flag-es" viewBox="0 0 3 2">
+      <rect width="3" height="2" fill="#c60b1e"/>
+      <rect y="0.5" width="3" height="1" fill="#ffc400"/>
+    </symbol>
+  </svg>
+  <main>
+    <div class="topbar">
+      <h1>Tasks App</h1>
+      <div class="topbar-actions">
+        <!-- User menu: only visible when logged in -->
+        <div id="user-menu" hidden>
+          <button type="button" id="user-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="user-dropdown" data-i18n-aria-label="user.menu">
+            <span id="user-initial" aria-hidden="true">?</span>
+          </button>
+          <div id="user-dropdown" role="menu" hidden>
+            <div class="user-info">
+              <strong id="user-name"></strong>
+              <span id="user-email"></span>
+            </div>
+            <button type="button" id="logout" role="menuitem" data-i18n="user.logout">⎋ Log out</button>
+          </div>
+        </div>
+        <!-- Language selector: dropdown with flags (drawn as SVG: Windows doesn't render flag emojis) -->
+        <div id="lang-menu">
+          <button type="button" id="lang-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="lang-list" data-i18n-aria-label="lang.label" data-i18n-title="lang.label">
+            <svg class="flag" aria-hidden="true" focusable="false"><use id="lang-current" href="#flag-us"/></svg>
+            <span class="chev" aria-hidden="true">▾</span>
+          </button>
+          <div id="lang-list" role="menu" hidden>
+            <button type="button" role="menuitemradio" data-lang="en" aria-checked="true">
+              <svg class="flag" aria-hidden="true" focusable="false"><use href="#flag-us"/></svg> English
+            </button>
+            <button type="button" role="menuitemradio" data-lang="es" aria-checked="false">
+              <svg class="flag" aria-hidden="true" focusable="false"><use href="#flag-es"/></svg> Español
+            </button>
+          </div>
+        </div>
+        <button type="button" id="theme-toggle" aria-label="Switch theme">🌙</button>
+      </div>
+    </div>
+
+    <!-- Login screen -->
+    <section id="auth-view">
+      <div class="tabs">
+        <button type="button" id="tab-login" class="active" data-i18n="auth.login">Log in</button>
+        <button type="button" id="tab-register" data-i18n="auth.register">Sign up</button>
+      </div>
+      <form id="auth-form">
+        <label><span data-i18n="auth.email">Email</span> <input id="email" type="email" autocomplete="username" required></label>
+        <label id="name-row" hidden><span data-i18n="auth.name">Name</span> <input id="full-name" type="text" maxlength="100" autocomplete="name"></label>
+        <label><span data-i18n="auth.password">Password</span> <input id="password" type="password" minlength="8" maxlength="128" autocomplete="current-password" required></label>
+        <button type="submit" id="auth-submit" data-i18n="auth.login">Log in</button>
+      </form>
+    </section>
+
+    <!-- Todos screen -->
+    <section id="todos-view" hidden>
+      <form id="todo-form">
+        <input id="new-title" type="text" maxlength="100" placeholder="New task…" data-i18n-placeholder="todo.new" required>
+        <input id="new-date" type="date" title="Day you'll do it" data-i18n-title="todo.dayTitle">
+        <select id="new-priority" title="Priority" data-i18n-title="todo.priority">
+          <option value="low" data-i18n="prio.low">Low</option>
+          <option value="medium" data-i18n="prio.medium" selected>Medium</option>
+          <option value="high" data-i18n="prio.high">High</option>
+        </select>
+        <button type="submit" data-i18n="todo.add">Add</button>
+      </form>
+
+      <!-- Filters accordion: closed by default to save space -->
+      <details id="filters-panel">
+        <summary><span data-i18n="filters.title">Filters</span> <span id="f-count" class="badge" hidden></span></summary>
+      <div class="filters">
+        <button type="button" data-filter="all" class="active" data-i18n="filters.all">All</button>
+        <button type="button" data-filter="false" data-i18n="filters.pending">Pending</button>
+        <button type="button" data-filter="true" data-i18n="filters.done">Done</button>
+      </div>
+
+      <div class="filter-grid">
+        <label><span data-i18n="filters.priority">Priority</span>
+          <select id="f-priority">
+            <option value="" data-i18n="filters.all">All</option>
+            <option value="high" data-i18n="prio.high">High</option>
+            <option value="medium" data-i18n="prio.medium">Medium</option>
+            <option value="low" data-i18n="prio.low">Low</option>
+          </select>
+        </label>
+        <label><span data-i18n="filters.sortBy">Sort by</span>
+          <select id="f-sort">
+            <option value="due_date" data-i18n="filters.sortDate">Date</option>
+            <option value="priority" data-i18n="filters.sortPriority">Priority</option>
+            <option value="id" data-i18n="filters.sortCreated">Created</option>
+          </select>
+        </label>
+        <label><span data-i18n="filters.from">From</span> <input id="f-from" type="date"></label>
+        <label><span data-i18n="filters.to">To</span> <input id="f-to" type="date"></label>
+        <label><span data-i18n="filters.date">Date</span>
+          <select id="f-scheduled">
+            <option value="" data-i18n="filters.all">All</option>
+            <option value="true" data-i18n="filters.withDate">With date</option>
+            <option value="false" data-i18n="filters.noDate">No date</option>
+          </select>
+        </label>
+        <label class="check"><input id="f-overdue" type="checkbox"> <span data-i18n="filters.overdue">Overdue only</span></label>
+        <button type="button" id="f-reset" data-i18n="filters.reset">Clear filters</button>
+      </div>
+      </details>
+
+      <div class="list-actions">
+        <button type="button" id="delete-all" class="danger-outline" data-i18n="todo.deleteAll">🗑 Delete all</button>
+      </div>
+
+      <ul id="todo-list"></ul>
+      <p id="empty" hidden data-i18n="todo.empty">No tasks.</p>
+
+      <!-- AI assistant -->
+      <section id="chat">
+        <h2>Juan AI</h2>
+        <div id="chat-log" aria-live="polite">
+          <p class="bot" id="chat-welcome" data-i18n="chat.welcome">Hi! I can add, organize and plan your tasks.</p>
+        </div>
+        <form id="chat-form">
+          <input id="chat-input" type="text" maxlength="2000" placeholder="Message the assistant…" data-i18n-placeholder="chat.placeholder" autocomplete="off" required>
+          <button type="submit" id="chat-send" data-i18n="chat.send">Send</button>
+        </form>
+        <button type="button" id="chat-clear" class="link" data-i18n="chat.clear">New conversation</button>
+      </section>
+    </section>
+
+    <p id="message" role="alert"></p>
+  </main>
+
+  <!-- Confirmation modal (native <dialog>: blocks the page behind, Esc closes it, handles focus) -->
+  <dialog id="confirm-dialog" aria-labelledby="dlg-title" aria-describedby="dlg-text">
+    <form method="dialog">
+      <h2 id="dlg-title" data-i18n="dlg.title">⚠️ Delete all tasks?</h2>
+      <p id="dlg-text"><span data-i18n="dlg.text1">All your tasks will be deleted.</span> <strong data-i18n="dlg.text2">This cannot be undone.</strong></p>
+      <div class="dlg-actions">
+        <button type="submit" value="cancel" id="dlg-cancel" autofocus data-i18n="dlg.cancel">Cancel</button>
+        <button type="button" id="dlg-confirm" class="danger" data-i18n="dlg.confirm">Yes, delete all</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>

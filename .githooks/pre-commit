@@ -1,0 +1,29 @@
+#!/bin/sh
+# Blocks commits that contain secrets. Enable once per clone:  git config core.hooksPath .githooks
+# (Bypass only if you are sure it's a false positive: git commit --no-verify)
+
+# 1) Never commit real env files (the .env.example template is fine)
+bad_files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '(^|/)\.env(\..+)?$|(^|/)\.mcp\.json$|\.(pem|key)$' | grep -v '\.env\.example$')
+if [ -n "$bad_files" ]; then
+  echo "COMMIT BLOCKED: these files must not be committed:"
+  echo "$bad_files"
+  exit 1
+fi
+
+# 2) Key-looking strings in the lines being added (values are never printed)
+pattern='sk-ant-[A-Za-z0-9_-]{10,}|sk-[A-Za-z0-9]{32,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{20,}|BEGIN (RSA|OPENSSH|EC|PRIVATE) .*KEY'
+hits=$(git diff --cached -U0 --diff-filter=ACM | grep -E '^\+' | grep -v '^+++' | grep -E "$pattern" | wc -l)
+if [ "$hits" -gt 0 ]; then
+  echo "COMMIT BLOCKED: $hits added line(s) look like API keys or private keys."
+  echo "Move them to .env (ignored by git) and leave the variable empty in committed files."
+  exit 1
+fi
+
+# 3) A non-empty secret assigned in .env.example
+if git diff --cached --name-only | grep -q '\.env\.example$'; then
+  if git show :.env.example | grep -E '^(ANTHROPIC_API_KEY|SECRET_KEY)=' | grep -vE '^(ANTHROPIC_API_KEY=$|SECRET_KEY=change-me$)' | grep -q .; then
+    echo "COMMIT BLOCKED: .env.example must keep ANTHROPIC_API_KEY empty and SECRET_KEY=change-me."
+    exit 1
+  fi
+fi
+exit 0
